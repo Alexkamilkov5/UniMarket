@@ -22,3 +22,6 @@ repos:
     hooks:
       - id: bandit
         args: ["-r", "app"]
+        pass_filenames: false
+
+  
