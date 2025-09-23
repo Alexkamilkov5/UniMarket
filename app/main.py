@@ -16,3 +16,12 @@ class HelloResponse(BaseModel):
 @app.get("/hello")  # type: ignore[misc]
 def hello(name: str = Query("world")) -> dict[str, str]:
     return {"message": f"Hello, {name}!"}
+
+
+class VersionResponse(BaseModel):
+    version: str
+
+
+@app.get("/version")
+def version() -> VersionResponse:
+    return VersionResponse(version="0.1.0")
