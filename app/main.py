@@ -1,19 +1,16 @@
-from typing import List, Optional, cast
+from typing import List  # stdlib (оставьте только если реально используете)
+from typing import Optional, cast
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Security, status
-
-# для защищенного маршрута
+from fastapi import Query  # third-party
+from fastapi import Depends, FastAPI, HTTPException, Security, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token, hash_password, verify_password
+from app.auth import create_access_token, hash_password, verify_password  # first-party
 from app.config import ALGORITHM, SECRET_KEY
-from app.database import SessionLocal
-
-# from app.deps import get_db
-# from app.main import get_current_username  # если есть защита токеном
+from app.deps import get_db
 from app.models import Item, User
 from app.schemas import (
     ItemCreate,
@@ -55,12 +52,12 @@ def version() -> VersionResponse:
 
 
 #   4 mashg'ulotni bajarish
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
 
 @app.post("/auth/register")
