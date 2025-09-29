@@ -15,6 +15,7 @@ from app.models import Item, User
 from app.schemas import (
     ItemCreate,
     ItemResponse,
+    ItemUpdate,
     RegisterRequest,
     TokenResponse,
     UserPublic,
@@ -155,3 +156,33 @@ def list_items(db: Session = Depends(get_db)) -> List[ItemResponse]:
     items: List[Item] = db.query(Item).all()
     # return items
     return [ItemResponse.model_validate(it) for it in items]
+
+
+# 7 mashgulot itemni id bo'yicha olish
+@app.put("/items/{item_id}", response_model=ItemResponse)
+def update_item(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
+    db_item = db.query(Item).filter(Item.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    if item.name is not None:
+        db_item.name = item.name
+    if item.description is not None:
+        db_item.description = item.description
+    if item.price is not None:
+        db_item.price = item.price
+
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+@app.delete("/items/{item_id}", status_code=204)
+def delete_item(item_id: int, db: Session = Depends(get_db)):
+    db_item = db.query(Item).filter(Item.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    db.delete(db_item)
+    db.commit()
+    return None

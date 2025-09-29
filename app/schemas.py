@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -29,34 +31,32 @@ try:
     _V2 = True
 except Exception:
     _V2 = False
-# class ItemCreate(BaseModel):
-#     name: str = Field(..., min_length=1, example="Laptop")
-#     description: str | None = Field(None, example="Gaming laptop")
-#     price: float = Field(..., gt=0, example=1200.50)
 
 
 class ItemCreate(BaseModel):
-    name: str = Field(..., min_length=1)
-    description: str | None = Field(None)
-    price: float = Field(..., gt=0)
+    name: str = Field(..., min_length=1, json_schema_extra={"example": "Laptop"})
+    description: Optional[str] = Field(
+        None, max_length=500, json_schema_extra={"example": "Gaming laptop"}
+    )
+    price: float = Field(..., gt=0, json_schema_extra={"example": 1200.50})
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"name": "Laptop", "description": "Gaming laptop", "price": 1200.50}
-            ]
-        }
-    }
+
+class ItemUpdate(BaseModel):
+    name: Optional[str] = Field(
+        None, min_length=1, json_schema_extra={"example": "New Laptop"}
+    )
+    description: Optional[str] = Field(
+        None, max_length=500, json_schema_extra={"example": "Updated description"}
+    )
+    price: Optional[float] = Field(None, gt=0, json_schema_extra={"example": 1500.00})
 
 
 class ItemResponse(BaseModel):
     id: int
     name: str
-    description: str | None
+    description: Optional[str]
     price: float
-    if _V2:
-        model_config = ConfigDict(from_attributes=True)
-    else:
 
-        class Config:
-            orm_mode = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )  # Позволяет строить модель из ORM-объектов

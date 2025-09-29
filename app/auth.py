@@ -7,7 +7,13 @@ from passlib.context import CryptContext
 
 from app.config import ALGORITHM, SECRET_KEY
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__ident="2b",  # современный идентификатор
+    # bcrypt__truncate_error=False  # по умолчанию False, оставляю явно на случай
+)
 
 
 def hash_password(password: str) -> str:
