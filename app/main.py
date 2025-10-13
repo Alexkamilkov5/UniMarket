@@ -1,7 +1,7 @@
 from typing import List  # stdlib (оставьте только если реально используете)
 from typing import Optional, cast
 
-import uvicorn
+# import uvicorn
 from fastapi import Query  # third-party
 from fastapi import Depends, FastAPI, HTTPException, Security, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, hash_password, verify_password  # first-party
 from app.config import ALGORITHM, SECRET_KEY
+
+# from app.database import get_db
 from app.deps import get_db
 from app.models import Item, User
 from app.schemas import (
@@ -28,6 +30,11 @@ from app.schemas import (
 
 
 app = FastAPI(title="UniMarket", version="0.1.0")
+
+
+@app.get("/")
+async def root():
+    return {"message": "UniMarket API работает!", "status": "ok"}
 
 
 @app.get("/health")  # type: ignore[misc]
@@ -187,12 +194,3 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     db.delete(db_item)
     db.commit()
     return None
-
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "app.main:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True,  # Автоперезагрузка при изменении кода
-    )

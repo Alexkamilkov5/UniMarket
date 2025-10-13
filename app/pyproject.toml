@@ -8,3 +8,18 @@ profile = "black"
 line_length = 88
 filter_files = true
 known_first_party = ["app", "tests"]
+
+[tool.mutmut]
+paths_to_mutate = "app/main.py"     # папка с вашим кодом
+tests_dir       = "tests"   # папка с тестами
+runner = "pytest -q --tb=short"
+# 👇 Исключаем ненужные директории (ускоряет анализ)
+exclude = [
+    "app/__init__.py",
+    "app/config/",
+    "app/migrations/",
+    "venv/",
+    "tests/"
+]
+timeout_factor = 4
+use_coverage = true
