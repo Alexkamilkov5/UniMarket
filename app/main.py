@@ -1,35 +1,52 @@
 from typing import List  # stdlib (оставьте только если реально используете)
-from typing import Optional, cast
+from typing import Optional, Sequence, cast
 
 # import uvicorn
 from fastapi import Query  # third-party
 from fastapi import Depends, FastAPI, HTTPException, Security, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
+from sqlalchemy import asc, desc
+from sqlalchemy import update as sql_update
 from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, hash_password, verify_password  # first-party
-from app.config import ALGORITHM, SECRET_KEY
-
-# from app.database import get_db
+from app.config import settings
 from app.deps import get_db
-from app.models import Item, User
+from app.models import Category, Item, User
 from app.schemas import (
+    CategoryCreate,
+    CategoryResponse,
     ItemCreate,
     ItemResponse,
     ItemUpdate,
+    PageItems,
     RegisterRequest,
     TokenResponse,
     UserPublic,
 )
+
+SECRET_KEY = settings.UNIMARKET_SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+# from app.database import get_db
+
 
 # Login endpoint -login uchun endpoint
 
 # Endpoint to get current user info 7 punkt
 
 
-app = FastAPI(title="UniMarket", version="0.1.0")
+# app = FastAPI(title="UniMarket", version="0.1.0")
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="Платформа для покупки и продажи товаров между студентами",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    debug=settings.DEBUG,  # Используем из настроек
+)
 
 
 @app.get("/")
@@ -146,42 +163,109 @@ def read_me(
 
 
 # 6 mashgulot itemlar uchun endpointlar
+# @app.post("/items", response_model=ItemResponse)
+# def create_item(
+#     item: ItemCreate,
+#     db: Session = Depends(get_db),
+#     current_username: str = Depends(get_current_username),  # убери если без токена
+# ) -> ItemResponse:
+#     db_item = Item(name=item.name, description=item.description, price=item.price)
+#     db.add(db_item)
+#     db.commit()
+#     db.refresh(db_item)
+#     return ItemResponse.model_validate(db_item)
 @app.post("/items", response_model=ItemResponse)
-def create_item(
-    item: ItemCreate,
-    db: Session = Depends(get_db),
-    current_username: str = Depends(get_current_username),  # убери если без токена
-) -> ItemResponse:
-    db_item = Item(name=item.name, description=item.description, price=item.price)
+def create_item(item: ItemCreate, db: Session = Depends(get_db)):
+    db_item = Item(
+        name=item.name,
+        description=item.description,
+        price=item.price,
+        category_id=item.category_id,
+    )
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    return ItemResponse.model_validate(db_item)
+    return db_item
 
 
-@app.get("/items", response_model=List[ItemResponse])
-def list_items(db: Session = Depends(get_db)) -> List[ItemResponse]:
-    items: List[Item] = db.query(Item).all()
-    # return items
-    return [ItemResponse.model_validate(it) for it in items]
+# @app.get("/items", response_model=List[ItemResponse])
+# def list_items(db: Session = Depends(get_db)) -> List[ItemResponse]:
+#     items: List[Item] = db.query(Item).all()
+#     # return items
+#     return [ItemResponse.model_validate(it) for it in items]
+
+
+# @app.get("/items", response_model=Sequence[ItemResponse])
+# def list_items(
+#     category_id: Optional[int] = Query(None, description="ID категории для фильтрации"),
+#     db: Session = Depends(get_db),
+# ) -> List[ItemResponse]:
+#     q = db.query(Item)
+#     if category_id is not None:
+#         q = q.filter(Item.category_id == category_id)
+#     return q.all()
+
+ALLOWED_SORT_FIELDS = {
+    "id": Item.id,
+    "name": Item.name,
+    "price": Item.price,
+}
+
+
+@app.get("/items", response_model=PageItems)
+def list_items(
+    category_id: Optional[int] = Query(None, description="Фильтр по категории"),
+    limit: int = Query(10, ge=1, le=100, description="Размер страницы"),
+    offset: int = Query(0, ge=0, description="Смещение"),
+    sort_by: str = Query(
+        "id", description=f"Поле сортировки: {', '.join(ALLOWED_SORT_FIELDS.keys())}"
+    ),
+    order: str = Query("asc", pattern="^(asc|desc)$", description="Порядок: asc|desc"),
+    db: Session = Depends(get_db),
+) -> PageItems:
+    # Базовый запрос
+    q = db.query(Item)
+    if category_id is not None:
+        q = q.filter(Item.category_id == category_id)
+    # total до пагинации
+    total = q.count()
+    # сортировка через белый список
+    sort_col = ALLOWED_SORT_FIELDS.get(sort_by)
+    if sort_col is None:
+        raise HTTPException(status_code=400, detail=f"Unsupported sort_by={sort_by}")
+    q = q.order_by(asc(sort_col) if order == "asc" else desc(sort_col))
+    # пагинация
+    items: Sequence[Item] = q.offset(offset).limit(limit).all()
+    # next_offset (если есть следующая страница)
+    next_offset: Optional[int] = offset + limit if offset + limit < total else None
+    return PageItems(
+        items=items,  # FastAPI+Pydantic v2 сам преобразует ORM → ItemResponse
+        total=total,
+        limit=limit,
+        offset=offset,
+        next_offset=next_offset,
+    )
 
 
 # 7 mashgulot itemni id bo'yicha olish
-@app.put("/items/{item_id}", response_model=ItemResponse)
-def update_item(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
+@app.put(
+    "/items/{item_id}", response_model=ItemResponse, status_code=status.HTTP_200_OK
+)
+def update_item_clean(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
+    # Проверяем существование
     db_item = db.query(Item).filter(Item.id == item_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    if item.name is not None:
-        db_item.name = item.name
-    if item.description is not None:
-        db_item.description = item.description
-    if item.price is not None:
-        db_item.price = item.price
+    # Получаем только заполненные поля
+    update_data = item.model_dump(exclude_unset=True)
 
-    db.commit()
-    db.refresh(db_item)
+    if update_data:  # Если есть что обновлять
+        stmt = sql_update(Item).where(Item.id == item_id).values(**update_data)
+        db.execute(stmt)
+        db.commit()
+        db.refresh(db_item)
+
     return db_item
 
 
@@ -194,3 +278,27 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     db.delete(db_item)
     db.commit()
     return None
+
+
+# 5 hafta uchun categorylar uchun endpointlar
+@app.post("/categories", response_model=CategoryResponse)
+def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
+    db_category = Category(name=category.name)
+    db.add(db_category)
+    db.commit()
+    db.refresh(db_category)
+    return db_category
+
+
+@app.get("/categories", response_model=List[CategoryResponse])
+def list_categories(db: Session = Depends(get_db)):
+    return db.query(Category).all()
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # на учебном проекте можно *, в проде — домены
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

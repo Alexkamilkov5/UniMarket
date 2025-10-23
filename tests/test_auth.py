@@ -8,7 +8,7 @@ client = TestClient(app)
 
 
 def test_register_and_login():
-    userNik = "Alice" + str(random.randint(1, 10000))
+    userNik = "Alice" + str(random.randint(1, 5000))
     # регистрация — JSON
     r = client.post("/auth/register", json={"username": userNik, "password": "secret"})
     assert r.status_code == 200

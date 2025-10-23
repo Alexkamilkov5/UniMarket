@@ -1,6 +1,17 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+venv/
+
+# Environment variables - НИКОГДА НЕ КОММИТИМ!
 .env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite3
+
+# IDE
 .vscode/
 .idea/

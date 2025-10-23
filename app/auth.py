@@ -5,8 +5,10 @@ from typing import Optional, cast
 from jose import jwt
 from passlib.context import CryptContext
 
-from app.config import ALGORITHM, SECRET_KEY
+from app.config import settings
 
+SECRET_KEY = settings.UNIMARKET_SECRET_KEY
+ALGORITHM = settings.ALGORITHM
 # pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 pwd_context = CryptContext(
     schemes=["bcrypt"],
