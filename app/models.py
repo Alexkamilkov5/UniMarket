@@ -16,15 +16,6 @@ class User(Base):
     password: Mapped[str] = mapped_column(String, nullable=False)
 
 
-# class Item(Base):
-#     __tablename__ = "items"
-
-#     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-#     name: Mapped[str] = mapped_column(String, nullable=False)
-#     description: Mapped[str | None] = mapped_column(String, nullable=True)
-#     price: Mapped[float] = mapped_column(Float, nullable=False)
-
-
 class Category(Base):
     __tablename__ = "categories"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -39,6 +30,12 @@ class Item(Base):
     name = mapped_column(String, index=True)
     description: Mapped[int] = mapped_column(String, nullable=True)
     price: Mapped[int] = mapped_column(Integer)
-    category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id"))
+    category_id: Mapped[int] = mapped_column(  # ВАЖНО
+        ForeignKey("categories.id"),
+        nullable=True,
+        index=True,
+    )
+
+    # category_id: Mapped[int] = mapped_column(Integer, ForeignKey("categories.id"))
     # связь с категорией
     category = relationship("Category", back_populates="items")

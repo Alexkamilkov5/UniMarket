@@ -11,7 +11,7 @@ print(f"VERSION: {settings.VERSION}")
 print(f"DEBUG: {settings.DEBUG} (тип: {type(settings.DEBUG).__name__})")
 print(f"PORT: {settings.PORT} (тип: {type(settings.PORT).__name__})")
 print(f"DATABASE_URL: {settings.DATABASE_URL}")
-print(f"SECRET_KEY: {'*' * len(settings.UNIMARKET_SECRET_KEY)} (скрыт)")
+# print(f"SECRET_KEY: {'*' * len(settings.UNIMARKET_SECRET_KEY} #(скрыт)"}
 print(f"ALLOWED_ORIGINS: {settings.ALLOWED_ORIGINS}")
 
 print("\n✅ Конфигурация загружена успешно!")
