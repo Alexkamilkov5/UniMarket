@@ -1,3 +1,20 @@
 [flake8]
 max-line-length = 100  
-extend-ignore = E203, W503    
+extend-ignore = E203, W503  
+exclude = 
+    .venv,
+    .git,
+    __pycache__,
+    build,
+    dist,
+    migrations,
+    .tox,
+    *.egg-info,
+    venv  
+per-file-ignores =
+    tests/*: S101
+    .venv/Lib/site-packages/yaml/*: F403,F401,F405
+    .venv/Lib/site-packages/websockets/*: F403,F401,F405,F811
+    .venv/Lib/site-packages/watchfiles/*: E501
+    .venv/Lib/site-packages/virtualenv/*: E501
+    tests/conftest.py: E402

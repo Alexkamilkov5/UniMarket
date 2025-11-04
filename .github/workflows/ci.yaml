@@ -9,19 +9,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt -r requirements-dev.txt
+          # Зафиксируем версии тулов, чтобы CI совпадал с локалью (опционально, но полезно)
+          pip install black==24.4.2 isort==5.13.2 flake8==7.0.0 mypy==1.10.0 bandit==1.7.9
+
       - name: Lint & Types & Security
         run: |
+          isort --profile black --filter-files --check-only .
           black --check .
-          isort --check-only .
           flake8 .
           mypy .
           bandit -r app
+
       - name: Tests
         run: pytest -q
+ 

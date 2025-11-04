@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>UniMarket — Demo UI</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🛒 UniMarket</h1>
+    <div id="status">API: <span id="health">...</span></div>
+  </header>
+
+  <section class="card">
+    <h2>1) Регистрация</h2>
+    <input id="reg-username" placeholder="username" />
+    <input id="reg-password" type="password" placeholder="password" />
+    <button id="btn-register">Зарегистрироваться</button>
+    <pre id="reg-result"></pre>
+  </section>
+
+  <section class="card">
+    <h2>2) Логин (JWT)</h2>
+    <input id="login-username" placeholder="username" />
+    <input id="login-password" type="password" placeholder="password" />
+    <button id="btn-login">Войти</button>
+    <div>Токен: <code id="token-preview"></code></div>
+  </section>
+
+  <section class="card">
+    <h2>3) Категории</h2>
+    <div class="row">
+      <input id="cat-name" placeholder="Новая категория" />
+      <button id="btn-add-category">Добавить</button>
+    </div>
+    <button id="btn-load-categories">Обновить список</button>
+    <ul id="cat-list"></ul>
+  </section>
+
+  <section class="card">
+    <h2>4) Товары</h2>
+    <div class="row">
+      <input id="item-name" placeholder="Название" />
+      <input id="item-price" type="number" step="0.01" placeholder="Цена" />
+      <input id="item-desc" placeholder="Описание (необязательно)" />
+      <select id="item-category"></select>
+      <button id="btn-add-item">Добавить товар</button>
+    </div>
+
+    <div class="row">
+      <label>Фильтр по категории:</label>
+      <select id="filter-category"></select>
+      <label>Сортировка:</label>
+      <select id="sort-by">
+        <option value="id">id</option>
+        <option value="name">name</option>
+        <option value="price">price</option>
+      </select>
+      <select id="order">
+        <option value="asc">asc</option>
+        <option value="desc">desc</option>
+      </select>
+      <label>limit:</label>
+      <input id="limit" type="number" value="10" min="1" max="100" />
+      <label>offset:</label>
+      <input id="offset" type="number" value="0" min="0" />
+      <button id="btn-load-items">Загрузить</button>
+    </div>
+
+    <div id="items"></div>
+    <div class="row">
+      <button id="btn-prev">← Предыдущая</button>
+      <button id="btn-next">Следующая →</button>
+    </div>
+  </section>
+
+  <script src="./script.js"></script>
+</body>
+</html>

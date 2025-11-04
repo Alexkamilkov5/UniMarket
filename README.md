@@ -1,7 +1,15 @@
-# UniMarket (MVP)
-# UniMarket (MVP)
-Запуск (локально):
-1) python -m venv .venv && . ./.venv/Scripts/Activate.ps1  # Windows PowerShell
-2) pip install -r requirements.txt -r requirements-dev.txt
-3) uvicorn app.main:app --reload
+# 🛒 UniMarket API
+
+**Описание:** мини-маркетплейс на FastAPI с регистрацией, логином и добавлением товаров.
+
+## 🚀 Установка
+```bash
+git clone https://github.com/Alexkamilkov5/UniMarket.git
+cd UniMarket
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+
 Документация API: http://localhost:8000/docs

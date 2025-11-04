@@ -1,0 +1,67 @@
+# pyproject.toml
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+# Исключить миграции и виртуальное окружение
+exclude = [
+    '\.venv',
+    'migrations',
+    '.*/migrations/.*',
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "migrations.*",
+    ".*.migrations.*",
+]
+ignore_errors = true
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    "build",
+    "dist", 
+    "migrations",
+    ".tox",
+    "*.egg-info",
+    "venv"
+]
+per-file-ignores = [
+    "tests/*:S101"
+]
+
+[tool.bandit]
+exclude_dirs = ['.venv', 'tests']
+skips = ['B101', 'B104']   
+
+[tool.isort]
+profile = "black"
+line_length = 88
+filter_files = true
+known_first_party = ["app", "tests"]
+
+[tool.mutmut]
+paths_to_mutate = "app/main.py"     # папка с вашим кодом
+tests_dir       = "tests"   # папка с тестами
+runner = "pytest -q --tb=short"
+# 👇 Исключаем ненужные директории (ускоряет анализ)
+exclude = [
+    "app/__init__.py",
+    "app/config/",
+    "app/migrations/",
+    "venv/",
+    "tests/"
+]
+timeout_factor = 4
+use_coverage = true

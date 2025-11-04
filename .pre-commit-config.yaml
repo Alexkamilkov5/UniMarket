@@ -1,3 +1,5 @@
+exclude: '^\.venv/'
+
 repos:
   - repo: https://github.com/psf/black
     rev: 24.8.0
@@ -8,20 +10,23 @@ repos:
     rev: 5.13.2
     hooks:
       - id: isort
+        args: ["--profile=black", "--filter-files"]
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.1
     hooks:
       - id: flake8
+        exclude: '\.venv/|migrations/|__pycache__/'
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.11.2
     hooks:
       - id: mypy
+        exclude: '^\.venv/|^migrations/'
         additional_dependencies: ["pydantic==2.8.2"]
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.9
     hooks:
       - id: bandit
-        args: ["-r", "app"]
-        pass_filenames: false
+        exclude: '\.venv/|tests/|migrations/'
+        
 
   
