@@ -26,7 +26,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./unimarket.db"
 
     # === Безопасность ===
-    UNIMARKET_SECRET_KEY: Optional[str] = None
+    UNIMARKET_SECRET_KEY: str = (
+        "GgCtQ-5lhnQ9xWTUrf3wGzht5Qu8TwiDk9hIY8z4_S107Xp3pzCmNWup1yrais"
+    )
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 

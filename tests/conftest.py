@@ -6,12 +6,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.database import Base  # , get_db
+from app.database import Base
 
 # ВАЖНО: установить тестовый URL ДО импорта app.main
 os.environ["ENV"] = "test"
 os.environ["DATABASE_URL"] = "sqlite:///./unimarket.db"
-
+os.environ["UNIMARKET_SECRET_KEY"] = (
+    "GgCtQ-5lhnQ9xWTUrf3wGzht5Qu8TwiDk9hIY8z4_S107Xp3pzCmNWup1yrais_p"
+)
 
 from app.deps import get_db
 from app.main import app
