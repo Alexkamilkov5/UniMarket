@@ -1,8 +1,7 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:16
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -10,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - unimarket_db_data:/var/lib/postgresql/data
+      - dev_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-d", "unimarket"]
       interval: 10s
@@ -20,20 +19,23 @@ services:
   web:
     build:
       context: .
-    image: unimarket:local
-    command: uvicorn app.main:app --host 0.0.0.0 --port 80
-    ports:
-      - "8000:80"
+      dockerfile: Dockerfile.dev
+    image: unimarket-dev:latest
+    restart: always
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      ENV: development
-      ENVIRONMENT: development
-      DATABASE_URL: "postgresql+psycopg://postgres:postgres@db:5432/unimarket"
-      UNIMARKET_SECRET_KEY: "GgCtQ-5lhnQ9xWTUrf3wGzht5Qu8TwiDk9hIY8z4_S107Xp3pzCmNWup1yrais_p"
+    ports:
+      - "8000:8000"
     volumes:
-      - .:/app  # только для разработки — горячая перезагрузка кода
+      - .:/app
+    env_file:
+      - .env.development
+    environment:
+      DATABASE_URL: "postgresql+psycopg://postgres:postgres@db:5432/unimarket"
+      HOST: 0.0.0.0
+      PORT: 8000
+      ENV: development
 
 volumes:
-  unimarket_db_data:
+  dev_db_data:

@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List  # stdlib (оставьте только если реально используете)
 from typing import Optional, Sequence, cast
 
@@ -5,6 +6,7 @@ from typing import Optional, Sequence, cast
 from fastapi import Query  # third-party
 from fastapi import Depends, FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
@@ -15,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.auth import create_access_token, hash_password, verify_password  # first-party
 from app.config import settings
 from app.deps import get_db
+from app.middleware import RequestLoggingMiddleware
 from app.models import Category, Item, User
 from app.schemas import (
     CategoryCreate,
@@ -32,26 +35,31 @@ SECRET_KEY = settings.UNIMARKET_SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 # from app.database import get_db
 
-
 # Login endpoint -login uchun endpoint
 
 # Endpoint to get current user info 7 punkt
-
 
 # app = FastAPI(title="UniMarket", version="0.1.0")
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Платформа для покупки и продажи товаров между студентами",
+    description="Musayev-Платформа для покупки и продажи товаров между студентами",
     docs_url="/docs",
     redoc_url="/redoc",
     debug=settings.DEBUG,  # Используем из настроек
 )
 
+app.add_middleware(
+    RequestLoggingMiddleware
+)  # Добавляем наше middleware для логирования запросов
 
-@app.get("/")
-async def root():
-    return {"message": "UniMarket API работает!", "status": "ok"}
+
+# @app.get("/")
+# async def root():
+# return {"message": "UniMarket API работает!", "status": "ok"}
+@app.get("/", response_class=HTMLResponse)
+def read_index():
+    return Path("fronted/index.html").read_text(encoding="utf-8")
 
 
 @app.get("/health")  # type: ignore[misc]
@@ -174,37 +182,22 @@ def read_me(
 #     db.commit()
 #     db.refresh(db_item)
 #     return ItemResponse.model_validate(db_item)
-@app.post("/items", response_model=ItemResponse)
-def create_item(item: ItemCreate, db: Session = Depends(get_db)):
-    db_item = Item(
-        name=item.name,
-        description=item.description,
-        price=item.price,
-        category_id=item.category_id,
-    )
+
+
+@app.post("/items")
+def create_item(
+    item: ItemCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    db_item = Item(**item.model_dump(), owner_id=current_user.id)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
     return db_item
 
 
-# @app.get("/items", response_model=List[ItemResponse])
-# def list_items(db: Session = Depends(get_db)) -> List[ItemResponse]:
-#     items: List[Item] = db.query(Item).all()
-#     # return items
-#     return [ItemResponse.model_validate(it) for it in items]
-
-
-# @app.get("/items", response_model=Sequence[ItemResponse])
-# def list_items(
-#     category_id: Optional[int] = Query(None, description="ID категории для фильтрации"),
-#     db: Session = Depends(get_db),
-# ) -> List[ItemResponse]:
-#     q = db.query(Item)
-#     if category_id is not None:
-#         q = q.filter(Item.category_id == category_id)
-#     return q.all()
-
+# Белый список допустимых полей сортировки
 ALLOWED_SORT_FIELDS = {
     "id": Item.id,
     "name": Item.name,
@@ -269,15 +262,25 @@ def update_item_clean(item_id: int, item: ItemUpdate, db: Session = Depends(get_
     return db_item
 
 
-@app.delete("/items/{item_id}", status_code=204)
-def delete_item(item_id: int, db: Session = Depends(get_db)):
+@app.delete("/items/{item_id}, status_code=204")
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     db_item = db.query(Item).filter(Item.id == item_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
 
+    # Проверка прав
+    if db_item.owner_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=403, detail="Нельзя удалять чужие товары (только админ может)"
+        )
+
     db.delete(db_item)
     db.commit()
-    return None
+    return {"ok": True, "deleted": item_id}
 
 
 # 5 hafta uchun categorylar uchun endpointlar
