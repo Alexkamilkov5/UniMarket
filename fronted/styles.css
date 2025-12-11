@@ -250,3 +250,13 @@ code {
     color: var(--neon-cyan);
 }
 
+/* Item Image */
+.item-img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  background: #000;
+}
+

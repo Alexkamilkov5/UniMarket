@@ -4,7 +4,7 @@ from typing import Optional, Sequence, cast
 
 # import uvicorn
 from fastapi import Query  # third-party
-from fastapi import Depends, FastAPI, HTTPException, Security, status
+from fastapi import Depends, FastAPI, File, HTTPException, Security, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -17,7 +17,6 @@ from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, hash_password, verify_password  # first-party
 from app.config import settings
-from app.database import Base, engine
 from app.deps import get_db
 from app.middleware import RequestLoggingMiddleware
 from app.models import Category, Item, User
@@ -54,17 +53,7 @@ app = FastAPI(
 app.add_middleware(
     RequestLoggingMiddleware
 )  # Добавляем наше middleware для логирования запросов
-
-
-@app.on_event("startup")
-def startup_event():
-    """Initialize database tables on startup."""
-    try:
-        Base.metadata.create_all(bind=engine, checkfirst=True)
-    except Exception as e:  # noqa: F841
-        # Tables may already exist from another worker process
-        # Ignoring exception as this is expected in multi-worker scenarios
-        pass  # nosec B110
+app.mount("/uploads", StaticFiles(directory="app/static"), name="uploads")
 
 
 # Mount static files (CSS, JS, images)
@@ -324,6 +313,39 @@ def create_category(category: CategoryCreate, db: Session = Depends(get_db)):
 @app.get("/categories", response_model=List[CategoryResponse])
 def list_categories(db: Session = Depends(get_db)):
     return db.query(Category).all()
+
+
+@app.post("/{item_id}/upload-image")
+async def upload_image(
+    item_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    item = db.get(Item, item_id)
+    if not item:
+        raise HTTPException(404, "Item not found")
+
+    if item.owner_id != user.id and user.role != "admin":
+        raise HTTPException(403, "Forbidden")
+
+    filename = file.filename or ""
+    ext = filename.split(".")[-1].lower()
+
+    if ext not in ["jpg", "jpeg", "png"]:
+        raise HTTPException(400, "Invalid file type")
+    path = f"app/static/items/{item_id}.{ext}"
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(await file.read())
+    # Мы не сохраняем image_url в БД в этой версии, но если бы сохраняли:
+    # item.image_url = f"/uploads/items/{item_id}.{ext}"
+    # db.commit()
+
+    return {
+        "message": "Image uploaded successfully",
+        "url": f"/uploads/items/{item_id}.{ext}",
+    }
 
 
 app.add_middleware(
