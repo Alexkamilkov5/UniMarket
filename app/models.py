@@ -72,5 +72,8 @@ class Item(Base):
     )  # обратная связь — доступ к владельцу товара
 
 
+image_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
 def __repr__(self) -> str:
     return f"<Item(id={self.id}, name={self.name!r}, price={self.price}, owner_id={self.owner_id})>"
