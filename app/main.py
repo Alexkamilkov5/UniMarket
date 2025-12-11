@@ -323,18 +323,29 @@ async def upload_image(
     user=Depends(get_current_user),
 ):
     item = db.get(Item, item_id)
+    if not item:
+        raise HTTPException(404, "Item not found")
+
     if item.owner_id != user.id and user.role != "admin":
         raise HTTPException(403, "Forbidden")
-    ext = file.filename.split(".")[-1].lower()
+
+    filename = file.filename or ""
+    ext = filename.split(".")[-1].lower()
+
     if ext not in ["jpg", "jpeg", "png"]:
         raise HTTPException(400, "Invalid file type")
     path = f"app/static/items/{item_id}.{ext}"
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "wb") as f:
         f.write(await file.read())
-    item.image_url = f"/static/items/{item_id}.{ext}"
-    db.commit()
-    return {"status": "ok", "url": item.image_url}
+    # Мы не сохраняем image_url в БД в этой версии, но если бы сохраняли:
+    # item.image_url = f"/uploads/items/{item_id}.{ext}"
+    # db.commit()
+
+    return {
+        "message": "Image uploaded successfully",
+        "url": f"/uploads/items/{item_id}.{ext}",
+    }
 
 
 app.add_middleware(
