@@ -1,10 +1,14 @@
 import logging
 import time
+from pathlib import Path
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.auth import decode_token
+
+# Создаем директорию для логов, если её нет
+Path("logs").mkdir(exist_ok=True)
 
 logger = logging.getLogger("unimarket")  # Создаем логгер для приложения
 logger.setLevel(logging.INFO)  # Устанавливаем уровень логирования

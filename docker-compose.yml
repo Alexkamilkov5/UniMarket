@@ -12,7 +12,7 @@ services:
     volumes:
       - unimarket_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "unimarket"]
+      test: [ "CMD", "pg_isready", "-U", "postgres", "-d", "unimarket" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
       DATABASE_URL: "postgresql+psycopg://postgres:postgres@db:5432/unimarket"
       UNIMARKET_SECRET_KEY: "GgCtQ-5lhnQ9xWTUrf3wGzht5Qu8TwiDk9hIY8z4_S107Xp3pzCmNWup1yrais_p"
     volumes:
-      - .:/app  # только для разработки — горячая перезагрузка кода
+      - .:/app # только для разработки — горячая перезагрузка кода
 
 volumes:
   unimarket_db_data:
