@@ -57,9 +57,13 @@ USER appuser
 # expose port 80 inside container
 EXPOSE 80
 
+# make start script executable
+RUN chmod +x /app/scripts/start.sh
+
 # healthcheck (basic)
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f http://localhost/health || exit 1
 
-# default command (uvicorn binding to 0.0.0.0:80)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--workers", "2", "--loop", "auto"]
+# default command
+CMD ["/app/scripts/start.sh"]
+
