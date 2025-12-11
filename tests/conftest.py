@@ -78,5 +78,5 @@ def authenticated_client() -> TestClient:
     )
     token = response.json()["access_token"]
     # Set authorization header
-    test_client.headers = {"Authorization": f"Bearer {token}"}
+    test_client.headers.update({"Authorization": f"Bearer {token}"})
     return test_client
