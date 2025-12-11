@@ -3,10 +3,10 @@ FROM python:3.11-slim AS builder
 
 # system deps for some Python packages (bcrypt, psycopg, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    libpq-dev \
-    curl \
+  build-essential \
+  gcc \
+  libpq-dev \
+  curl \
   && rm -rf /var/lib/apt/lists/*
 
 # create working dir
@@ -32,6 +32,10 @@ COPY . .
 
 # ---------- final stage ----------
 FROM python:3.11-slim
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
 
 # non-root user
 RUN useradd --create-home appuser

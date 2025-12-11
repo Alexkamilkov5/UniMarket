@@ -8,6 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.staticfiles import StaticFiles
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 from sqlalchemy import asc, desc
@@ -16,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import create_access_token, hash_password, verify_password  # first-party
 from app.config import settings
+from app.database import Base, engine
 from app.deps import get_db
 from app.middleware import RequestLoggingMiddleware
 from app.models import Category, Item, User
@@ -52,6 +54,21 @@ app = FastAPI(
 app.add_middleware(
     RequestLoggingMiddleware
 )  # Добавляем наше middleware для логирования запросов
+
+
+@app.on_event("startup")
+def startup_event():
+    """Initialize database tables on startup."""
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+    except Exception as e:  # noqa: F841
+        # Tables may already exist from another worker process
+        # Ignoring exception as this is expected in multi-worker scenarios
+        pass  # nosec B110
+
+
+# Mount static files (CSS, JS, images)
+app.mount("/static", StaticFiles(directory="fronted"), name="static")
 
 
 # @app.get("/")
@@ -100,7 +117,9 @@ def register_user(request: RegisterRequest, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
-    new_user = User(username=request.username, password=hash_password(request.password))
+    new_user = User(
+        username=request.username, hashed_password=hash_password(request.password)
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -113,7 +132,9 @@ def login_user(
     db: Session = Depends(get_db),
 ) -> TokenResponse:
     user = db.query(User).filter(User.username == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.password):  # type: ignore[arg-type]
+    if not user or not verify_password(
+        form_data.password, user.hashed_password  # type: ignore[arg-type]
+    ):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = create_access_token({"sub": user.username})
     return TokenResponse(access_token=token)
@@ -123,15 +144,22 @@ def login_user(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-def get_current_user(token: str = Security(oauth2_scheme)):
+def get_current_user(
+    token: str = Security(oauth2_scheme), db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated user from token."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: Optional[str] = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return username
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    return user
 
 
 @app.get("/protected")
@@ -262,7 +290,7 @@ def update_item_clean(item_id: int, item: ItemUpdate, db: Session = Depends(get_
     return db_item
 
 
-@app.delete("/items/{item_id}, status_code=204")
+@app.delete("/items/{item_id}", status_code=204)
 def delete_item(
     item_id: int,
     db: Session = Depends(get_db),

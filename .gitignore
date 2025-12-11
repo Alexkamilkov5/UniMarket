@@ -17,3 +17,13 @@ venv/
 # IDE
 .vscode/
 .idea/
+
+
+unimarket.tar
+unimarket.db
+docker-compose.yml
+docker-compose.dev.yml
+docker-compose.prod.yml
+logs/unimarket.log
+migrations/versions/*.py
+migrations/versions/*.pyc
