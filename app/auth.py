@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, cast
 
-from jose import jwt
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.config import settings
@@ -33,3 +33,12 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return cast(bool, pwd_context.verify(plain_password, hashed_password))
+
+
+def decode_token(token: str) -> dict:
+    """Декодирует JWT токен и возвращает payload"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return {}

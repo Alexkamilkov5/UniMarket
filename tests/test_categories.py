@@ -19,13 +19,13 @@ def test_create_category(client):
     assert data["name"] == "Ноутбуки" + str(rand1)
 
 
-def test_create_item_with_category(client):  # создаём категорию
+def test_create_item_with_category(authenticated_client):  # создаём категорию
     rand1 = random.randint(500, 5000)
 
-    cat = client.post(
+    cat = authenticated_client.post(
         "/categories", json={"name": "Телефоны" + str(rand1)}
     ).json()  # создаём товар
-    r = client.post(
+    r = authenticated_client.post(
         "/items",
         json={
             "name": "iPhone" + str(rand1),

@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    #environment:
+    # POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    # POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    # POSTGRES_DB: ${POSTGRES_DB:-unimarket}
+    env_file:
+      - .env.production
+    volumes:
+      - unimarket_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - unimarket_net
+
+  web:
+    build:
+      context: .
+      # target: final   # раскомментировать, если Dockerfile multi-stage и нужен конкретный target
+    image: unimarket:latest
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    env_file:
+      - .env.production
+    environment:
+      HOST: 0.0.0.0
+      PORT: 80
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - unimarket_net
+
+  migrate:
+    build:
+      context: .
+      # target: builder   # если в Dockerfile есть стадия с alembic/зависимостями
+    image: unimarket:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-c", "alembic upgrade head" ]
+    env_file:
+      - .env.production
+    networks:
+      - unimarket_net
+    restart: "no"
+
+volumes:
+  unimarket_db_data:
+
+
+networks:
+  unimarket_net:
+    driver: bridge

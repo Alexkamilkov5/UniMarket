@@ -12,8 +12,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # === Основные настройки ===
-    PROJECT_NAME: str = "UniMarket"
-    VERSION: str = "0.1.0"
+    PROJECT_NAME: str = "UniMarket-Musayev"
+    VERSION: str = "0.2.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "development"  # development, staging, production
 
@@ -27,7 +27,7 @@ class Settings(BaseSettings):
 
     # === Безопасность ===
     UNIMARKET_SECRET_KEY: str = (
-        "GgCtQ-5lhnQ9xWTUrf3wGzht5Qu8TwiDk9hIY8z4_S107Xp3pzCmNWup1yrais"
+        "GgCtQ5lhnQ9xWTUrf3wGzht5Qu8TwiDk9hIY8z4_S107Xp3pzCmNWup1yrais"
     )
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -132,3 +132,5 @@ def get_settings() -> Settings:
 # Если вы хотите избежать валидации при unit-тестах, НЕ импортируйте settings в conftest.py
 # или установите нужные env vars ДО импорта (см. tests/conftest.py пример).
 settings = get_settings()
+# UNIMARKET_SECRET_KEY = settings.UNIMARKET_SECRET_KEY
+# ALGORITHM = settings.ALGORITHM

@@ -60,3 +60,23 @@ app.dependency_overrides[get_db] = override_get_db
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture
+def authenticated_client() -> TestClient:
+    """Fixture that provides a TestClient with authentication headers."""
+    test_client = TestClient(app)
+    # Register a test user
+    username = "testuser"
+    password = "testpass123"
+    test_client.post(
+        "/auth/register", json={"username": username, "password": password}
+    )
+    # Login to get token
+    response = test_client.post(
+        "/auth/login", data={"username": username, "password": password}
+    )
+    token = response.json()["access_token"]
+    # Set authorization header
+    test_client.headers.update({"Authorization": f"Bearer {token}"})
+    return test_client
