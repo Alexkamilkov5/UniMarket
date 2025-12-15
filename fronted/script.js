@@ -1,4 +1,5 @@
-const API_BASE = "http://localhost";
+// Automatically detect the API base URL (works for localhost and deployment)
+const API_BASE = window.location.origin;
 let token = localStorage.getItem("unimarket_token") || null;
 
 // === helpers ===
