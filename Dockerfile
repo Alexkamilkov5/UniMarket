@@ -55,14 +55,14 @@ RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 USER appuser
 
 # expose port 80 inside container
-EXPOSE 80
+EXPOSE 8000
 
 # make start script executable
-RUN chmod +x /app/scripts/start.sh
+RUN sed -i 's/\r$//g' /app/scripts/start.sh && chmod +x /app/scripts/start.sh
 
 # healthcheck (basic)
 HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost/health || exit 1
+  CMD curl -f http://localhost:8000/health || exit 1
 
 # default command
 CMD ["/app/scripts/start.sh"]
