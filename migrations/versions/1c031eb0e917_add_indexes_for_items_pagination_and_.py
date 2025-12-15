@@ -59,8 +59,9 @@ def upgrade() -> None:
     #     ),
     #     sa.PrimaryKeyConstraint("id"),
     # )
-    op.create_index(op.f("ix_items_id"), "items", ["id"], unique=False)
-    op.create_index(op.f("ix_items_name"), "items", ["name"], unique=False)
+    # op.create_index(op.f("ix_items_id"), "items", ["id"], unique=False)
+    # op.create_index(op.f("ix_items_name"), "items", ["name"], unique=False)
+    pass
     # ### end Alembic commands ###
 
 
