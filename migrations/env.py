@@ -21,7 +21,13 @@ target_metadata = Base.metadata
 # access to the values within the .ini file in use.
 config = context.config
 
-db_url = os.getenv("DB_URL", "sqlite:///./unimarket.db")
+# Prioritize DATABASE_URL (standard), then DB_URL, then SQLite default
+db_url = os.getenv("DATABASE_URL") or os.getenv("DB_URL") or "sqlite:///./unimarket.db"
+
+# Fix for SQLAlchemy >= 1.4 which removed support for 'postgres://'
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 config.set_main_option("sqlalchemy.url", db_url)
 
 # Interpret the config file for Python logging.
