@@ -4,6 +4,10 @@ import os
 import sys
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
@@ -82,7 +86,8 @@ def run_migrations_online() -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
-            compare_type=True,  # полезно: сравнивать типы колонок
+            compare_type=True,
+            render_as_batch=True,
         )
 
         with context.begin_transaction():
