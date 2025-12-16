@@ -5,6 +5,10 @@ set -e
 echo "Running migrations..."
 alembic upgrade head
 
+# Create admin user (idempotent) - workaround for Render Free Tier
+echo "Ensuring admin user exists..."
+python scripts/create_admin.py "${ADMIN_USERNAME:-admin}" "${ADMIN_PASSWORD:-admin123}"
+
 # Start server
 echo "Starting server..."
 # Use exec to replace the shell process with uvicorn (better signal handling)

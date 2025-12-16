@@ -19,7 +19,9 @@ class User(Base):
         "password", String(255), nullable=False
     )
     # password: Mapped[str] = mapped_column(String, nullable=False)
-    role: Mapped[str] = mapped_column(String(20), nullable=False, server_default="user")
+    role: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="user", server_default="user"
+    )
     # role: Mapped[str] = mapped_column(String(20), default="user")
 
     items = relationship("Item", back_populates="owner", cascade="all, delete-orphan")
