@@ -8,9 +8,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 load_dotenv()
-DB_URL = os.getenv("DB_URL", "sqlite:///./unimarket.db")
+DB_URL = os.getenv("DATABASE_URL") or os.getenv("DB_URL") or "sqlite:///./unimarket.db"
 
-DATABASE_URL = "sqlite:///./unimarket.db"
+if DB_URL.startswith("postgres://"):
+    DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)
+
 connect_args = {"check_same_thread": False} if DB_URL.startswith("sqlite") else {}
 
 # engine = create_engine(DB_URL, pool_pre_ping=True, connect_args=connect_args)
