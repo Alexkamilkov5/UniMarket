@@ -92,12 +92,28 @@ function updateUserDisplay() {
     $("status").textContent = "Connected";
     $("status").style.color = "var(--neon-green)";
     $("avatar-icon").textContent = "👨‍🚀";
+    $("btn-logout").style.display = "block";
   } else {
     $("user-display").textContent = "Guest";
     $("status").textContent = "Disconnected";
     $("avatar-icon").textContent = "👽";
+    $("btn-logout").style.display = "none";
   }
 }
+
+$("btn-logout").onclick = () => {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem("unimarket_token");
+
+  // Reset UI parts
+  $("token-preview").textContent = "None";
+  $("items").innerHTML = ""; // Clear items or reload as guest
+
+  updateUserDisplay();
+  alert("System Disconnected");
+  loadItems(); // Reload items to update delete buttons (remove them)
+};
 
 // === register ===
 $("btn-register").onclick = async () => {
