@@ -22,7 +22,8 @@
         </div>
         <h3 id="user-display">Guest</h3>
         <div id="status" class="user-status">Disconnected</div>
-        <button id="btn-logout" class="secondary-btn" style="margin-top:10px; display:none; font-size:0.8em; width:100%">Logout</button>
+        <button id="btn-logout" class="secondary-btn"
+          style="margin-top:10px; display:none; font-size:0.8em; width:100%">Logout</button>
       </div>
 
       <nav>
@@ -130,6 +131,28 @@
       </section>
 
     </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal"
+      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+      <div class="glass-panel" style="width:300px; padding:20px;">
+        <h3>Edit Item</h3>
+        <input type="hidden" id="edit-id">
+        <label>Name</label>
+        <input id="edit-name" style="width:100%; margin-top:5px;">
+        <label>Price</label>
+        <input id="edit-price" type="number" step="0.01" style="width:100%; margin-top:5px;">
+        <label>Description</label>
+        <input id="edit-desc" style="width:100%; margin-top:5px;">
+
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button id="btn-save-edit" class="action-btn" style="flex:1">Save</button>
+          <button onclick="document.getElementById('edit-modal').style.display='none'" class="secondary-btn"
+            style="flex:1">Cancel</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="/static/script.js"></script>

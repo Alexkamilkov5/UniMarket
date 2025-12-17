@@ -261,11 +261,20 @@ def list_items(
 @app.put(
     "/items/{item_id}", response_model=ItemResponse, status_code=status.HTTP_200_OK
 )
-def update_item_clean(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
+def update_item_clean(
+    item_id: int,
+    item: ItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     # Проверяем существование
     db_item = db.query(Item).filter(Item.id == item_id).first()
     if not db_item:
         raise HTTPException(status_code=404, detail="Item not found")
+
+    # Проверка прав
+    if db_item.owner_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Нельзя изменять чужие товары")
 
     # Получаем только заполненные поля
     update_data = item.model_dump(exclude_unset=True)

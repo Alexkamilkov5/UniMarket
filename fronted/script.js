@@ -324,7 +324,7 @@ async function loadItems() {
             <h4 style="margin:5px 0">${it.name}</h4>
             <div class="item-price">${it.price} Credits</div>
             <div style="font-size:0.8em; color:var(--text-dim)">${it.description || "No specs"}</div>
-            ${renderDeleteButton(it)}
+            ${renderAdminButtons(it)}
         </div>
         `;
       }
@@ -338,14 +338,58 @@ async function loadItems() {
 }
 loadItems();
 
-function renderDeleteButton(item) {
+function renderAdminButtons(item) {
   if (!currentUser) return "";
   // Admin or Owner
   if (currentUser.role === "admin" || currentUser.id === item.owner_id) {
-    return `<button onclick="deleteItem(${item.id})" style="background:red; color:white; margin-top:5px; border:none; padding:4px 8px; cursor:pointer; border-radius:4px;">Delete</button>`;
+    // Escaping item data for onclick is tricky, better to just pass ID and fetch or use data attr
+    // For simplicity, we'll store items in a map or just pass ID and find in list?
+    // Let's pass ID and re-fetch or use the displayed item if we had it.
+    // EASIEST: pass ID, we have the item in the `page.items` array scope if we are careful, 
+    // BUT `page.items` is local to `loadItems`.
+    // FIX: Let's encode the item data into data attributes or just pass ID and look it up?
+    // Or stringify?
+    // Let's attach a global look-up or just put data in data-attributes on the card? 
+    // Actually, passing ID is safest. We can find it in the DOM or re-fetch.
+    // Optimization: Let's just pass the properties directly (careful with quotes).
+
+    // Better:
+    return `
+        <div style="margin-top:5px; display:flex; gap:5px">
+            <button onclick='openEditModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' style="background:var(--neon-cyan); color:black; border:none; padding:4px 8px; cursor:pointer; border-radius:4px; font-size:0.8em">Edit</button>
+            <button onclick="deleteItem(${item.id})" style="background:red; color:white; border:none; padding:4px 8px; cursor:pointer; border-radius:4px; font-size:0.8em">Delete</button>
+        </div>`;
   }
   return "";
 }
+
+window.openEditModal = (item) => {
+  $("edit-id").value = item.id;
+  $("edit-name").value = item.name;
+  $("edit-price").value = item.price;
+  $("edit-desc").value = item.description || "";
+  $("edit-modal").style.display = "flex";
+};
+
+$("btn-save-edit").onclick = async () => {
+  const id = $("edit-id").value;
+  const name = $("edit-name").value;
+  const price = parseFloat($("edit-price").value);
+  const description = $("edit-desc").value;
+
+  try {
+    await fetch(`${API_BASE}/items/${id}`, {
+      method: "PUT",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ name, price, description })
+    });
+    $("edit-modal").style.display = "none";
+    loadItems();
+    alert("Item Updated");
+  } catch (e) {
+    alert("Update Failed: " + e.toString());
+  }
+};
 
 window.deleteItem = async (itemId) => {
   if (!confirm("Are you sure you want to delete this item?")) return;
