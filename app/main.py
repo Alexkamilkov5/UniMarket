@@ -184,7 +184,7 @@ def read_me(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    return UserPublic(id=user.id, username=user.username)  # type: ignore[misc]
+    return UserPublic(id=user.id, username=user.username, role=user.role)  # type: ignore[misc]
 
 
 # 6 mashgulot itemlar uchun endpointlar
