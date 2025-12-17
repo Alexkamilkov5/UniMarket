@@ -75,6 +75,7 @@ class ItemResponse(BaseModel):
     description: Optional[str]
     price: float
     category_id: Optional[int] = None
+    owner_id: int
 
     model_config = ConfigDict(from_attributes=True)
 

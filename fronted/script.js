@@ -1,6 +1,7 @@
 // Automatically detect the API base URL (works for localhost and deployment)
 const API_BASE = window.location.origin;
 let token = localStorage.getItem("unimarket_token") || null;
+let currentUser = null;
 
 // === helpers ===
 const $ = (id) => document.getElementById(id);
@@ -65,8 +66,25 @@ document.querySelectorAll(".nav-btn").forEach(btn => {
   } catch {
     $("health").textContent = "Offline";
   }
+  if (token) {
+    await fetchCurrentUser();
+  }
   updateUserDisplay();
 })();
+
+async function fetchCurrentUser() {
+  try {
+    currentUser = await getJSON(`${API_BASE}/me`);
+  } catch (e) {
+    console.error("Failed to fetch user", e);
+    // if 401, maybe logout?
+    if (e.message.includes("401")) {
+      token = null;
+      localStorage.removeItem("unimarket_token");
+      currentUser = null;
+    }
+  }
+}
 
 function updateUserDisplay() {
   if (token) {
@@ -120,6 +138,7 @@ $("btn-login").onclick = async () => {
     token = data.access_token;
     localStorage.setItem("unimarket_token", token);
     $("token-preview").textContent = token.slice(0, 12) + "...";
+    await fetchCurrentUser();
     updateUserDisplay();
     alert("Welcome to the Nexus!");
   } catch (e) {
@@ -289,6 +308,7 @@ async function loadItems() {
             <h4 style="margin:5px 0">${it.name}</h4>
             <div class="item-price">${it.price} Credits</div>
             <div style="font-size:0.8em; color:var(--text-dim)">${it.description || "No specs"}</div>
+            ${renderDeleteButton(it)}
         </div>
         `;
       }
@@ -301,4 +321,28 @@ async function loadItems() {
   }
 }
 loadItems();
+
+function renderDeleteButton(item) {
+  if (!currentUser) return "";
+  // Admin or Owner
+  if (currentUser.role === "admin" || currentUser.id === item.owner_id) {
+    return `<button onclick="deleteItem(${item.id})" style="background:red; color:white; margin-top:5px; border:none; padding:4px 8px; cursor:pointer; border-radius:4px;">Delete</button>`;
+  }
+  return "";
+}
+
+window.deleteItem = async (itemId) => {
+  if (!confirm("Are you sure you want to delete this item?")) return;
+  try {
+    const r = await fetch(`${API_BASE}/items/${itemId}`, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    if (!r.ok) throw new Error(await r.text());
+    alert("Item deleted");
+    loadItems();
+  } catch (e) {
+    alert("Failed to delete: " + e.toString());
+  }
+};
 
