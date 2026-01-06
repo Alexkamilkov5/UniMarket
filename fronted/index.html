@@ -114,6 +114,13 @@
         </div>
 
         <div class="glass-panel">
+          <h3>Manage Categories</h3>
+          <div id="admin-category-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Categories with edit/delete buttons will be injected here -->
+          </div>
+        </div>
+
+        <div class="glass-panel">
           <h3>Fabricate Item</h3>
           <input id="item-name" placeholder="Item Name" />
           <div class="row">
@@ -148,6 +155,23 @@
         <div style="margin-top:15px; display:flex; gap:10px;">
           <button id="btn-save-edit" class="action-btn" style="flex:1">Save</button>
           <button onclick="document.getElementById('edit-modal').style.display='none'" class="secondary-btn"
+            style="flex:1">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Edit Modal -->
+    <div id="edit-category-modal" class="modal"
+      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+      <div class="glass-panel" style="width:300px; padding:20px;">
+        <h3>Edit Category</h3>
+        <input type="hidden" id="edit-cat-id">
+        <label>Name</label>
+        <input id="edit-cat-name" style="width:100%; margin-top:5px;">
+
+        <div style="margin-top:15px; display:flex; gap:10px;">
+          <button id="btn-save-category-edit" class="action-btn" style="flex:1">Save</button>
+          <button onclick="document.getElementById('edit-category-modal').style.display='none'" class="secondary-btn"
             style="flex:1">Cancel</button>
         </div>
       </div>

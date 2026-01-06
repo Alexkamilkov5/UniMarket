@@ -99,6 +99,10 @@ function updateUserDisplay() {
     $("avatar-icon").textContent = "👽";
     $("btn-logout").style.display = "none";
   }
+  // Refresh admin category list to show/hide based on role
+  if (typeof loadAdminCategories === 'function') {
+    loadAdminCategories();
+  }
 }
 
 $("btn-logout").onclick = () => {
@@ -195,8 +199,87 @@ $("btn-load-categories").onclick = async () => refreshCategories();
 async function refreshCategories() {
   await loadCategoriesTo($("item-category"));
   await loadCategoriesTo($("filter-category"));
+  await loadAdminCategories();
 }
 refreshCategories(); // initial load
+
+// Load categories for admin management
+async function loadAdminCategories() {
+  try {
+    const cats = await getJSON(`${API_BASE}/categories`);
+    const container = $("admin-category-list");
+
+    if (!currentUser || currentUser.role !== "admin") {
+      container.innerHTML = '<div style="color: var(--text-dim); font-size: 0.9em;">Admin access required</div>';
+      return;
+    }
+
+    if (cats.length === 0) {
+      container.innerHTML = '<div style="color: var(--text-dim); font-size: 0.9em;">No categories yet</div>';
+      return;
+    }
+
+    container.innerHTML = cats.map(cat => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+        <span style="flex: 1;">${cat.name}</span>
+        <div style="display: flex; gap: 5px;">
+          <button onclick='openEditCategoryModal(${JSON.stringify(cat).replace(/'/g, "&#39;")})' 
+            style="background:var(--neon-cyan); color:black; border:none; padding:4px 12px; cursor:pointer; border-radius:4px; font-size:0.85em;">Edit</button>
+          <button onclick="deleteCategory(${cat.id})" 
+            style="background:red; color:white; border:none; padding:4px 12px; cursor:pointer; border-radius:4px; font-size:0.85em;">Delete</button>
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    console.error("Failed to load admin categories", e);
+  }
+}
+
+window.openEditCategoryModal = (category) => {
+  $("edit-cat-id").value = category.id;
+  $("edit-cat-name").value = category.name;
+  $("edit-category-modal").style.display = "flex";
+};
+
+$("btn-save-category-edit").onclick = async () => {
+  const id = $("edit-cat-id").value;
+  const name = $("edit-cat-name").value.trim();
+
+  if (!name) {
+    alert("Category name is required");
+    return;
+  }
+
+  try {
+    await fetch(`${API_BASE}/categories/${id}`, {
+      method: "PUT",
+      headers: jsonHeaders(),
+      body: JSON.stringify({ name })
+    });
+    $("edit-category-modal").style.display = "none";
+    await refreshCategories();
+    alert("Category Updated");
+  } catch (e) {
+    alert("Update Failed: " + e.toString());
+  }
+};
+
+window.deleteCategory = async (categoryId) => {
+  if (!confirm("Are you sure you want to delete this category? Items in this category will lose their category assignment.")) return;
+
+  try {
+    const r = await fetch(`${API_BASE}/categories/${categoryId}`, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    if (!r.ok) throw new Error(await r.text());
+    alert("Category deleted");
+    await refreshCategories();
+  } catch (e) {
+    alert("Failed to delete: " + e.toString());
+  }
+};
+
 
 // === items ===
 $("btn-add-item").onclick = async () => {
